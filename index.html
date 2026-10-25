@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="『日本中世気象災害史年表稿』のCSVデータをブラウザで詳細検索。記事キーワード、年代、地域、原出典、掲載書誌、和暦に対応。">
+  <title>日本中世気象災害史年表稿｜詳細検索</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <p class="eyebrow">歴史資料データ検索</p>
+      <h1>日本中世気象災害史年表稿 詳細検索</h1>
+      <p class="lead">年代・地域・史料名・記事の語句を組み合わせて検索できます。</p>
+      <p class="collection-summary">収録 <strong id="dataset-count">—</strong> 件 ｜ 対象年代：901〜1650年（添付CSVに基づく）</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" aria-labelledby="search-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="search-title">検索条件</h2>
+          <p class="section-description">複数の欄を指定すると、すべての条件を満たす記事に絞り込みます。</p>
+        </div>
+      </div>
+      <form id="search-form">
+        <div class="field wide">
+          <label for="event-keywords">記事本文のキーワード</label>
+          <input id="event-keywords" name="keywords" type="search" placeholder="例：雨 雷" autocomplete="off">
+          <div class="field-foot row-inline">
+            <small>空白で区切って複数指定できます。</small>
+            <fieldset class="choice-set" aria-label="キーワードの検索方法">
+              <label><input type="radio" name="keywordMode" value="or" checked> いずれかを含む（OR）</label>
+              <label><input type="radio" name="keywordMode" value="and"> すべてを含む（AND）</label>
+            </fieldset>
+          </div>
+        </div>
+
+        <div class="fields-grid">
+          <div class="field">
+            <label for="min-year">西暦・開始年</label>
+            <input id="min-year" name="minYear" type="number" min="1" max="9999" inputmode="numeric" placeholder="例：1180">
+          </div>
+          <div class="field">
+            <label for="max-year">西暦・終了年</label>
+            <input id="max-year" name="maxYear" type="number" min="1" max="9999" inputmode="numeric" placeholder="例：1333">
+          </div>
+          <div class="field">
+            <label for="japanese-date">和暦</label>
+            <input id="japanese-date" name="japaneseDate" type="text" placeholder="例：延喜2年6月17日">
+            <small>「延喜4年3月」は通常3月・閏3月の両方、「延喜4年閏3月」は閏3月だけを検索します。年号のみの指定や全角数字も使用できます。</small>
+          </div>
+          <div class="field">
+            <label for="region">地域</label>
+            <input id="region" name="region" type="search" placeholder="例：京都">
+          </div>
+          <div class="field">
+            <label for="source">原出典</label>
+            <input id="source" name="source" type="search" placeholder="例：日本紀略">
+            <label class="check-option"><input type="checkbox" name="sourceExact"> 完全一致で検索</label>
+          </div>
+          <div class="field">
+            <label for="bibliography">掲載書誌</label>
+            <input id="bibliography" name="bibliography" type="search" placeholder="例：大日本史料">
+            <label class="check-option"><input type="checkbox" name="bibliographyExact"> 完全一致で検索</label>
+          </div>
+        </div>
+
+        <div class="search-footer">
+          <div class="display-options">
+            <label for="per-page">1ページの件数
+              <select id="per-page" name="perPage">
+                <option value="20" selected>20件</option>
+                <option value="50">50件</option>
+                <option value="100">100件</option>
+              </select>
+            </label>
+            <label for="sort-order">表示順
+              <select id="sort-order" name="sortOrder">
+                <option value="asc" selected>年代の古い順</option>
+                <option value="desc">年代の新しい順</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button type="submit" id="search-button" class="button primary" disabled>検索する</button>
+            <button type="button" id="reset-button" class="button secondary" disabled>条件をクリア</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite">データを読み込んでいます…</div>
+    <section id="local-file-panel" class="panel file-panel" hidden aria-labelledby="local-file-title">
+      <h2 id="local-file-title">CSVファイルを選択</h2>
+      <p>このHTMLをパソコンで直接開いた場合、ブラウザの制限によりCSVを自動取得できないことがあります。<code>cmdjm-latest.csv</code> を選択すると検索できます。公開URLからアクセスする場合は自動で読み込まれます。</p>
+      <label for="csv-file" class="file-label">CSVファイルを選択する</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv">
+    </section>
+
+    <section class="panel results-panel" aria-labelledby="results-title">
+      <div class="results-header">
+        <div>
+          <h2 id="results-title">検索結果</h2>
+          <p id="results-summary" class="results-summary">読み込み中</p>
+        </div>
+        <button type="button" id="export-button" class="button secondary" disabled>結果をCSVで保存</button>
+      </div>
+      <p id="no-results" class="empty-message" hidden>該当する記事がありません。条件を変更して再検索してください。</p>
+      <div class="table-wrap" id="table-wrap" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">和暦</th>
+              <th scope="col">グレゴリオ暦</th>
+              <th scope="col">地域</th>
+              <th scope="col" class="article-heading">天変地異などの記事</th>
+              <th scope="col">原出典</th>
+              <th scope="col">掲載書誌</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <nav id="pagination" class="pagination" aria-label="検索結果のページ切り替え" hidden>
+        <div class="pagination-buttons">
+          <button type="button" id="first-page" class="button small secondary">最初</button>
+          <button type="button" id="prev-page" class="button small secondary">前へ</button>
+          <span id="page-indicator" class="page-indicator" aria-live="polite"></span>
+          <button type="button" id="next-page" class="button small secondary">次へ</button>
+          <button type="button" id="last-page" class="button small secondary">最後</button>
+        </div>
+      </nav>
+    </section>
+
+    <section class="about" aria-labelledby="about-title">
+      <h2 id="about-title">データと検索について</h2>
+      <p>藤木久志 編『日本中世気象災害史年表稿』（高志書院）のデータセットを使用しています。データ提供：東京大学史料編纂所。<a href="https://lab.hi.u-tokyo.ac.jp/datasets/saigai" target="_blank" rel="noopener noreferrer">データセットの説明</a>／<a href="https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/about" target="_blank" rel="noopener noreferrer">凡例・注意事項</a>。</p>
+      <p>原データは <a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> で提供されています。ここでは添付されたRailsアプリ内のCSVを収録しています。必ずしも公開元の最新データではありません。本サイトは東京大学史料編纂所の公式サービスではありません。</p>
+      <p class="note">記事中の歴史的な表記は原CSVから変更していません。和暦表示では月日が「0」の場合に省略し、検索時のみ年号のゼロ埋めや全角数字を吸収します。「グレゴリオ暦」は原CSVの値から表示しています。日付が不詳・概略の場合の意味は原資料・凡例で確認してください。検索結果のCSVは原データと同じ9列です。</p>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container">ブラウザ内で検索を処理します。検索条件やCSVを外部サーバーへ送信しません。</div></footer>
+</body>
+</html>
